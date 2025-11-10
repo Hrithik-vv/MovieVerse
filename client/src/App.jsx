@@ -15,6 +15,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import AdminBanners from './pages/AdminBanners';
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
                 element={
                   <AdminRoute>
                     <AdminDashboard />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/banners"
+                element={
+                  <AdminRoute>
+                    <AdminBanners />
                   </AdminRoute>
                 }
               />

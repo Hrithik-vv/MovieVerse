@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const connectDB = require('./config/db');
+const bannerRoutes = require('./routes/bannerRoutes');
 
 // Load env vars
 dotenv.config();
@@ -13,7 +14,10 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false, // Disable CSP for image streaming
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -30,6 +34,7 @@ app.use('/api/theatres', require('./routes/theatreRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/tmdb', require('./routes/tmdbRoutes'));
+app.use('/api/banners', bannerRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
