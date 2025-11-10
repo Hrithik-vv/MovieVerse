@@ -10,11 +10,16 @@
     "install-client": "cd client && npm install",
     "install-all": "npm run install-server && npm run install-client"
   },
-  "keywords": ["movie", "booking", "mern", "react", "node"],
+  "keywords": [
+    "movie",
+    "booking",
+    "mern",
+    "react",
+    "node"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^8.2.0"
   }
 }
-

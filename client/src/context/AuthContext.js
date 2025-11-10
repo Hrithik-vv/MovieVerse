@@ -74,8 +74,40 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const googleLogin = async (idToken) => {
+    try {
+      const res = await axios.post(`${API_URL}/api/auth/google`, { idToken });
+      const { token: newToken, ...userData } = res.data;
+      localStorage.setItem('token', newToken);
+      setToken(newToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      setUser(userData);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Google login failed' };
+    }
+  };
+
+  const requestPasswordOtp = async (email) => {
+    try {
+      const res = await axios.post(`${API_URL}/api/auth/forgot-password/request-otp`, { email });
+      return { success: true, message: res.data?.message || 'OTP sent' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to send OTP' };
+    }
+  };
+
+  const resetPasswordWithOtp = async (email, otp, newPassword) => {
+    try {
+      const res = await axios.post(`${API_URL}/api/auth/forgot-password/reset`, { email, otp, newPassword });
+      return { success: true, message: res.data?.message || 'Password reset successful' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Password reset failed' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, googleLogin, requestPasswordOtp, resetPasswordWithOtp }}>
       {children}
     </AuthContext.Provider>
   );
