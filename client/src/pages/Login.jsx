@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
@@ -8,8 +8,9 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, googleLogin, requestPasswordOtp, resetPasswordWithOtp } = useContext(AuthContext);
+  const { login, googleLogin, requestPasswordOtp, resetPasswordWithOtp, user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [showForgot, setShowForgot] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -19,13 +20,19 @@ const Login = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMsg, setForgotMsg] = useState('');
 
+  useEffect(() => {
+    if (!loading && user && pathname === '/login') {
+      navigate('/', { replace: true });
+    }
+  }, [loading, user, pathname, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     const result = await login(email, password);
     if (result.success) {
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } else {
       setError(result.message);
     }
@@ -77,7 +84,7 @@ const Login = () => {
             onSuccess={async (credentialResponse) => {
               const idToken = credentialResponse.credential;
               const result = await googleLogin(idToken);
-              if (result.success) navigate('/dashboard');
+              if (result.success) navigate('/dashboard', { replace: true });
               else setError(result.message);
             }}
             onError={() => setError('Google login failed')}

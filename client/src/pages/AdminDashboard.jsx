@@ -38,7 +38,7 @@ const AdminDashboard = () => {
   });
 
   React.useEffect(() => {
-    if (activeTab === 'movies') fetchMovies();
+    if (activeTab === 'movies' || activeTab === 'theatres') fetchMovies();
     if (activeTab === 'theatres') fetchTheatres();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'bookings') fetchBookings();
@@ -210,6 +210,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const getMovieTitle = (movie) => {
+    if (!movie) return 'Unknown Movie';
+    if (typeof movie === 'object') {
+      return movie.title || 'Unknown Movie';
+    }
+    const found = movies.find((m) => m._id === movie);
+    return found ? found.title : movie;
+  };
+
   const updateShow = async (theatreId, show) => {
     try {
       const payload = {
@@ -361,6 +370,7 @@ const AdminDashboard = () => {
                         {(theatre.shows || []).map((show) => (
                           <div key={show._id} className="bg-black/20 p-3 rounded flex justify-between items-center">
                             <div className="text-sm text-gray-300">
+                              <p className="font-semibold">{getMovieTitle(show.movieId)}</p>
                               <p>
                                 {new Date(show.showtime).toLocaleString()} — Screen: {show.screen} — ₹{show.price}
                               </p>
@@ -386,12 +396,20 @@ const AdminDashboard = () => {
                         <div className="bg-black/20 p-4 rounded">
                           <h4 className="font-semibold mb-2">Add Show</h4>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input
-                              placeholder="Movie ID"
+                            <select
                               value={showForm.movieId}
                               onChange={(e) => setShowForm({ ...showForm, movieId: e.target.value })}
                               className="px-3 py-2 rounded bg-dark text-white"
-                            />
+                            >
+                              <option value="" disabled>
+                                Select Movie
+                              </option>
+                              {movies.map((movie) => (
+                                <option key={movie._id} value={movie._id}>
+                                  {movie.title}
+                                </option>
+                              ))}
+                            </select>
                             <input
                               type="datetime-local"
                               value={showForm.showtime}

@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import AuthContext from '../context/AuthContext';
@@ -10,8 +10,15 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useContext(AuthContext);
+  const { login, user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (!loading && user && pathname === '/admin/login') {
+      navigate('/', { replace: true });
+    }
+  }, [loading, user, pathname, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +34,7 @@ const AdminLogin = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.role === 'admin') {
-            navigate('/admin/dashboard');
+            navigate('/admin/dashboard', { replace: true });
           } else {
             setError('Access denied. Admin only.');
           }
