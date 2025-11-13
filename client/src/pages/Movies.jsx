@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
+import AuthContext from '../context/AuthContext';
+import { mapShowsByMovie, pickNextShow } from '../utils/showHelpers';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -10,10 +13,26 @@ const Movies = () => {
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState('');
   const [rating, setRating] = useState('');
+  const [availabilityMap, setAvailabilityMap] = useState({});
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchMovies();
   }, [search, genre, rating]);
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/theatres`);
+        setAvailabilityMap(mapShowsByMovie(res.data));
+      } catch (error) {
+        console.error('Error fetching availability:', error);
+      }
+    };
+
+    fetchAvailability();
+  }, []);
 
   const fetchMovies = async () => {
     try {
@@ -30,6 +49,29 @@ const Movies = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBookTickets = (movie, shows = []) => {
+    if (!movie) return;
+
+    if (!movie._id || shows.length === 0) {
+      navigate(`/movies/${movie._id || movie.id}`);
+      return;
+    }
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const targetShow = pickNextShow(shows);
+
+    if (!targetShow) {
+      navigate(`/movies/${movie._id}`);
+      return;
+    }
+
+    navigate(`/book/${movie._id}/${targetShow.theatreId}/${targetShow.showId}`);
   };
 
   const genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Thriller', 'Romance'];
@@ -90,7 +132,12 @@ const Movies = () => {
       ) : movies.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {movies.map((movie) => (
-            <MovieCard key={movie._id} movie={movie} />
+            <MovieCard
+              key={movie._id}
+              movie={movie}
+              availableShows={availabilityMap[movie._id] || []}
+              onBook={handleBookTickets}
+            />
           ))}
         </div>
       ) : (

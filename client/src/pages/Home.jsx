@@ -1,29 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
+import AuthContext from '../context/AuthContext';
+import { mapShowsByMovie, pickNextShow } from '../utils/showHelpers';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Home = () => {
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [dbMovies, setDbMovies] = useState([]);
+  const [availableMovies, setAvailableMovies] = useState([]);
+  const [availabilityMap, setAvailabilityMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     fetchMovies();
   }, []);
 
+  const handleBookTickets = (movie, shows = []) => {
+    if (!movie) return;
+
+    if (!movie._id || shows.length === 0) {
+      navigate(`/movies/${movie._id || movie.id}`);
+      return;
+    }
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const targetShow = pickNextShow(shows);
+
+    if (!targetShow) {
+      navigate(`/movies/${movie._id}`);
+      return;
+    }
+
+    navigate(`/book/${movie._id}/${targetShow.theatreId}/${targetShow.showId}`);
+  };
+
   const fetchMovies = async () => {
     try {
-      const [trendingRes, dbRes] = await Promise.all([
+      const [trendingRes, dbRes, theatresRes] = await Promise.all([
         axios.get(`${API_URL}/api/tmdb/trending`),
         axios.get(`${API_URL}/api/movies`),
+        axios.get(`${API_URL}/api/theatres`),
       ]);
       setTrendingMovies(trendingRes.data.slice(0, 10));
       setDbMovies(dbRes.data);
+
+      const availability = mapShowsByMovie(theatresRes.data);
+      setAvailabilityMap(availability);
+
+      const moviesWithShows = dbRes.data.filter(
+        (movie) => availability[movie._id]?.length
+      );
+      setAvailableMovies(moviesWithShows);
     } catch (error) {
       console.error('Error fetching movies:', error);
     } finally {
@@ -43,7 +82,12 @@ const Home = () => {
     }
   };
 
-  const displayMovies = dbMovies.length > 0 ? dbMovies : trendingMovies;
+  const displayMovies =
+    availableMovies.length > 0
+      ? availableMovies
+      : dbMovies.length > 0
+      ? dbMovies
+      : trendingMovies;
 
   // Prefer admin-provided banners if available, fallback to TMDB backdrops
   const [adminBanners, setAdminBanners] = useState([]);
@@ -200,9 +244,18 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {displayMovies.map((movie) => (
-              <MovieCard key={movie._id || movie.id} movie={movie} />
-            ))}
+            {displayMovies.map((movie) => {
+              const movieKey = movie._id || movie.id;
+              const shows = movie._id ? availabilityMap[movie._id] || [] : [];
+              return (
+                <MovieCard
+                  key={movieKey}
+                  movie={movie}
+                  availableShows={shows}
+                  onBook={movie._id ? handleBookTickets : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </section>

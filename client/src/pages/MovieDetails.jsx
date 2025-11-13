@@ -159,7 +159,13 @@ const MovieDetails = () => {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {theatre.shows
-                  .filter((show) => show.movieId.toString() === id)
+                  .filter((show) => {
+                    if (!show.movieId) return false;
+                    if (typeof show.movieId === 'object') {
+                      return show.movieId._id?.toString() === id;
+                    }
+                    return show.movieId.toString() === id;
+                  })
                   .map((show) => (
                     <button
                       key={show._id}
