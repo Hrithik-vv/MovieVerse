@@ -3,8 +3,10 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
 
+const getJwtSecret = () => process.env.JWT_SECRET || 'dev-secret';
+
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, getJwtSecret(), {
     expiresIn: '1h',
   });
 };

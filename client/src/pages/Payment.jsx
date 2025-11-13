@@ -37,19 +37,52 @@ const Payment = () => {
   };
 
   const handlePayment = async () => {
-    if (!window.Razorpay) {
-      alert('Razorpay SDK not loaded');
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('You must be logged in to make a payment');
+      navigate('/login');
       return;
     }
 
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const headers = { Authorization: `Bearer ${token}` };
     setProcessing(true);
 
     try {
-      // Create order
-      const orderRes = await axios.post(`${API_URL}/api/payment/create-order`, {
-        amount: booking.totalPrice,
-        bookingId: booking._id,
-      });
+      const orderRes = await axios.post(
+        `${API_URL}/api/payment/create-order`,
+        {
+          amount: booking.totalPrice,
+          bookingId: booking._id,
+        },
+        { headers }
+      );
+
+      if (orderRes.data.mock) {
+        try {
+          await axios.post(
+            `${API_URL}/api/payment/verify`,
+            {
+              bookingId: booking._id,
+              mock: true,
+              razorpay_order_id: orderRes.data.orderId,
+            },
+            { headers }
+          );
+          alert('Payment completed (mock mode).');
+          navigate('/dashboard');
+        } catch (mockError) {
+          console.error('Mock verification failed:', mockError?.response?.data || mockError);
+          alert(mockError?.response?.data?.message || 'Payment verification failed');
+        }
+        return;
+      }
+
+      if (!window.Razorpay) {
+        alert('Razorpay SDK not loaded');
+        return;
+      }
 
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_key',
@@ -60,19 +93,22 @@ const Payment = () => {
         order_id: orderRes.data.orderId,
         handler: async function (response) {
           try {
-            // Verify payment
-            await axios.post(`${API_URL}/api/payment/verify`, {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              bookingId: booking._id,
-            });
+            await axios.post(
+              `${API_URL}/api/payment/verify`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                bookingId: booking._id,
+              },
+              { headers }
+            );
 
             alert('Payment successful!');
             navigate('/dashboard');
-          } catch (error) {
-            alert('Payment verification failed');
-            console.error(error);
+          } catch (verifyError) {
+            console.error('Payment verification failed:', verifyError?.response?.data || verifyError);
+            alert(verifyError?.response?.data?.message || 'Payment verification failed');
           }
         },
         prefill: {
@@ -92,8 +128,8 @@ const Payment = () => {
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      alert('Error initiating payment');
-      console.error(error);
+      console.error('Error initiating payment:', error?.response?.data || error);
+      alert(error?.response?.data?.message || 'Error initiating payment');
     } finally {
       setProcessing(false);
     }

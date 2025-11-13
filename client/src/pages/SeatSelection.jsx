@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AuthContext from '../context/AuthContext';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const SeatSelection = () => {
   const { movieId, theatreId, showId } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [movie, setMovie] = useState(null);
   const [theatre, setTheatre] = useState(null);
   const [show, setShow] = useState(null);
@@ -51,6 +53,11 @@ const SeatSelection = () => {
   };
 
   const handleBook = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     if (selectedSeats.length === 0) {
       alert('Please select at least one seat');
       return;
@@ -58,14 +65,23 @@ const SeatSelection = () => {
 
     try {
       const totalPrice = selectedSeats.length * show.price;
-      const res = await axios.post(`${API_URL}/api/bookings`, {
-        movieId,
-        theatreId,
-        showId,
-        seats: selectedSeats,
-        totalPrice,
-        showtime: show.showtime,
-      });
+      const token = localStorage.getItem('token');
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined;
+
+      const res = await axios.post(
+        `${API_URL}/api/bookings`,
+        {
+          movieId,
+          theatreId,
+          showId,
+          seats: selectedSeats,
+          totalPrice,
+          showtime: show.showtime,
+        },
+        { headers }
+      );
 
       navigate(`/payment/${res.data._id}`);
     } catch (error) {
@@ -118,11 +134,12 @@ const SeatSelection = () => {
                   disabled={isBooked}
                   className={`
                     w-8 h-8 rounded text-xs
-                    ${isBooked
-                      ? 'bg-red-600 cursor-not-allowed'
-                      : isSelected
-                      ? 'bg-primary'
-                      : 'bg-gray-600 hover:bg-gray-500'
+                    ${
+                      isBooked
+                        ? 'bg-red-600 cursor-not-allowed'
+                        : isSelected
+                        ? 'bg-green-600 hover:bg-green-500'
+                        : 'bg-gray-600 hover:bg-gray-500'
                     }
                   `}
                 >
@@ -140,7 +157,7 @@ const SeatSelection = () => {
             <span className="text-sm text-gray-400">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-primary rounded"></div>
+            <div className="w-4 h-4 bg-green-600 rounded"></div>
             <span className="text-sm text-gray-400">Selected</span>
           </div>
           <div className="flex items-center gap-2">
@@ -172,4 +189,3 @@ const SeatSelection = () => {
 };
 
 export default SeatSelection;
-

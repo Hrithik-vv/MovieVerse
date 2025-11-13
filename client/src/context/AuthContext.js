@@ -11,12 +11,31 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
+    if (!token) {
+      delete axios.defaults.headers.common['Authorization'];
       setLoading(false);
+      return;
     }
+
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
+          setToken(null);
+          setUser(null);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    fetchUser();
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, [token]);
 
   const fetchUser = async () => {
@@ -72,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
+    setLoading(false);
   };
 
   const googleLogin = async (idToken) => {
