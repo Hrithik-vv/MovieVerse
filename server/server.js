@@ -16,7 +16,7 @@ const app = express();
 // Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Disable CSP for image streaming
+  contentSecurityPolicy: false, 
 }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',

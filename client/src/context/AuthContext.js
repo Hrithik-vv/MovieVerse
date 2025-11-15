@@ -21,11 +21,26 @@ export const AuthProvider = ({ children }) => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
+        // Only log out on user authentication errors, not Razorpay/payment errors
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          delete axios.defaults.headers.common['Authorization'];
-          setToken(null);
-          setUser(null);
+          const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
+          
+          // Don't log out if it's a Razorpay authentication error
+          if (errorMessage.includes('Razorpay') || errorMessage.includes('API keys')) {
+            // This is a Razorpay error, not a user auth error - don't log out
+            return Promise.reject(error);
+          }
+          
+          // Only log out on actual user authentication errors
+          if (errorMessage.includes('Not authorized') || 
+              errorMessage.includes('token') || 
+              errorMessage.includes('Authentication required') ||
+              !errorMessage) { // If no message, assume it's a user auth error
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
+            setToken(null);
+            setUser(null);
+          }
         }
         return Promise.reject(error);
       }
@@ -131,6 +146,14 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 export default AuthContext;
