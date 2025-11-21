@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 import MovieCard from '../components/MovieCard';
 import AuthContext from '../context/AuthContext';
@@ -16,6 +17,10 @@ const Movies = () => {
   const [availabilityMap, setAvailabilityMap] = useState({});
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    document.title = 'Movies - MovieVerse';
+  }, []);
 
   useEffect(() => {
     fetchMovies();
@@ -77,10 +82,37 @@ const Movies = () => {
   const genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Thriller', 'Romance'];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">All Movies</h1>
+    <div className="min-h-screen bg-dark">
+      {/* Page Title Section */}
+      <motion.section
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-gradient-to-r from-primary/20 via-dark-gray to-primary/20 py-16"
+      >
+        <div className="container mx-auto px-4 text-center">
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent"
+          >
+            Movies
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto"
+          >
+            Your Ultimate Destination for Movie Entertainment
+          </motion.p>
+        </div>
+      </motion.section>
 
-      {/* Filters */}
+      {/* Content Section */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Filters */}
       <div className="bg-dark-gray p-6 rounded-lg mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -145,6 +177,7 @@ const Movies = () => {
           <p className="text-gray-400 text-xl">No movies found</p>
         </div>
       )}
+      </div>
     </div>
   );
 };

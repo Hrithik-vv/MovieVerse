@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import RazorpayCheckout from '../components/RazorpayCheckout';
 import { useAuth } from '../context/AuthContext';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -12,7 +11,6 @@ const Payment = () => {
   const { user } = useAuth();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [orderData, setOrderData] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -49,121 +47,63 @@ const Payment = () => {
     setError(null);
 
     try {
-      // Use axios with default headers set by AuthContext
-      // This ensures the token is automatically included
-      const orderRes = await axios.post(
-        `${API_URL}/api/payment/create-order`,
+      const txnid = `txn_${booking._id}_${Date.now()}`;
+      const amount = booking.totalPrice;
+      const productinfo = booking._id;
+      const firstname = user.name || 'User';
+      const email = user.email;
+
+      // Get hash from backend
+      const hashRes = await axios.post(
+        `${API_URL}/api/payment/hash`,
         {
-          amount: booking.totalPrice,
-          bookingId: booking._id,
+          txnid,
+          amount,
+          productinfo,
+          firstname,
+          email
         }
       );
 
-      if (!orderRes.data.success) {
-        throw new Error(orderRes.data.message || 'Failed to create payment order');
+      if (!hashRes.data.success) {
+        throw new Error(hashRes.data.message || 'Failed to generate payment hash');
       }
 
-      // Store order data for RazorpayCheckout component
-      setOrderData({
-        orderId: orderRes.data.orderId,
-        amount: orderRes.data.amount,
-        currency: orderRes.data.currency || 'INR',
-      });
+      const { hash, key } = hashRes.data;
+
+      // Create form and submit
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://test.payu.in/_payment'; // Use test URL for now
+
+      const fields = {
+        key,
+        txnid,
+        amount,
+        productinfo,
+        firstname,
+        email,
+        phone: '9999999999', // Dummy phone for test
+        surl: `${API_URL}/api/payment/response`,
+        furl: `${API_URL}/api/payment/response`,
+        hash
+      };
+
+      for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+
     } catch (error) {
-      console.error('Error creating payment order:', error);
-      console.error('Error response:', error?.response?.data);
-      console.error('Error status:', error?.response?.status);
-      
-      // Don't redirect to login if it's a Razorpay authentication error (401 from Razorpay, not user auth)
-      // Only redirect if it's a user authentication error (401 from our server)
-      if (error?.response?.status === 401) {
-        const errorMessage = error?.response?.data?.message || error?.response?.data?.error || '';
-        
-        // If it's a Razorpay authentication error, don't treat it as user auth failure
-        if (errorMessage.includes('Razorpay') || errorMessage.includes('API keys')) {
-          setError('Razorpay authentication failed. The API keys are invalid. Please contact the administrator.');
-          return;
-        }
-        
-        // If it's a user authentication error, redirect to login
-        if (errorMessage.includes('Not authorized') || errorMessage.includes('token')) {
-          setError('Your session has expired. Please log in again.');
-          setTimeout(() => navigate('/login'), 2000);
-          return;
-        }
-      }
-      
-      const errorMessage = 
-        error?.response?.data?.message || 
-        error?.response?.data?.error ||
-        error?.message || 
-        'Failed to initiate payment. Please try again.';
-      
-      setError(errorMessage);
-      
-      // If it's a configuration error, show a more helpful message
-      if (errorMessage.includes('not configured') || errorMessage.includes('RAZORPAY')) {
-        setError('Payment gateway is not configured. Please contact the administrator.');
-      }
-      
-      // If it's a Razorpay authentication error, show specific message
-      if (errorMessage.includes('Authentication failed') || errorMessage.includes('authentication')) {
-        setError('Razorpay authentication failed. The API keys are invalid. Please contact the administrator.');
-      }
+      console.error('Error initiating payment:', error);
+      setError(error?.response?.data?.message || error.message || 'Failed to initiate payment');
     }
-  };
-
- 
-  const handlePaymentSuccess = async (paymentResponse) => {
-    const token = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-
-    try {
-      // Verify payment on backend
-      const verifyRes = await axios.post(
-        `${API_URL}/api/payment/verify`,
-        {
-          razorpay_order_id: paymentResponse.razorpay_order_id,
-          razorpay_payment_id: paymentResponse.razorpay_payment_id,
-          razorpay_signature: paymentResponse.razorpay_signature,
-          bookingId: booking._id,
-        },
-        { headers }
-      );
-
-      if (verifyRes.data.success) {
-        // Payment verified successfully
-        alert('Payment successful! Your booking is confirmed.');
-        navigate('/dashboard');
-      } else {
-        throw new Error(verifyRes.data.message || 'Payment verification failed');
-      }
-    } catch (error) {
-      console.error('Payment verification failed:', error);
-      setError(
-        error?.response?.data?.message || 
-        error?.message || 
-        'Payment verification failed. Please contact support.'
-      );
-      // Reset order data to allow retry
-      setOrderData(null);
-    }
-  };
-
- 
-  const handlePaymentError = (error) => {
-    console.error('Payment error:', error);
-    setError(
-      error?.description || 
-      error?.message || 
-      'Payment failed. Please try again.'
-    );
-    setOrderData(null);
-  };
-
- 
-  const handlePaymentClose = () => {
-    setOrderData(null);
   };
 
   if (loading) {
@@ -223,33 +163,15 @@ const Payment = () => {
           </div>
         )}
 
-        {!orderData ? (
-          <button
-            onClick={handleInitiatePayment}
-            className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded transition-colors"
-          >
-            Pay Now
-          </button>
-        ) : (
-          <RazorpayCheckout
-            amount={orderData.amount}
-            currency={orderData.currency}
-            orderId={orderData.orderId}
-            keyId={process.env.REACT_APP_RAZORPAY_KEY_ID}
-            name="MovieVerse"
-            description={`Booking for ${booking.movieId.title}`}
-            prefill={{
-              name: 'User',
-              email: 'user@example.com',
-            }}
-            onSuccess={handlePaymentSuccess}
-            onError={handlePaymentError}
-            onClose={handlePaymentClose}
-          />
-        )}
+        <button
+          onClick={handleInitiatePayment}
+          className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded transition-colors"
+        >
+          Pay with PayU
+        </button>
 
         <p className="text-sm text-gray-400 mt-4 text-center">
-          You will be redirected to Razorpay for secure payment
+          You will be redirected to PayU for secure payment
         </p>
       </div>
     </div>

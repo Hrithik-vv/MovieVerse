@@ -36,7 +36,7 @@ app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use('/api/tmdb', require('./routes/tmdbRoutes'));
 app.use('/api/banners', bannerRoutes);
 
-// Health check
+
 app.get('/api/health', (req, res) => {
   res.json({ message: 'MovieVerse API is running' });
 });

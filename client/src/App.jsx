@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Movies from './pages/Movies';
 import MovieDetails from './pages/MovieDetails';
+import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -28,6 +29,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/movies" element={<Movies />} />
               <Route path="/movies/:id" element={<MovieDetails />} />
+              <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin/login" element={<AdminLogin />} />
