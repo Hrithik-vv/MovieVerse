@@ -39,11 +39,10 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
           ? 'bg-dark-gray/95 backdrop-blur-md shadow-xl py-2'
           : 'bg-dark-gray shadow-lg py-3'
-      }`}
+        }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
@@ -89,6 +88,14 @@ const Navbar = () => {
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
+                to="/my-bookings"
+                className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
+              >
+                My Bookings
+              </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
                 to="/about"
                 className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
               >
@@ -110,6 +117,12 @@ const Navbar = () => {
               className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
             >
               Movies
+            </Link>
+            <Link
+              to="/my-bookings"
+              className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
+            >
+              My Bookings
             </Link>
             <Link
               to="/about"

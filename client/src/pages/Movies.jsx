@@ -113,70 +113,70 @@ const Movies = () => {
       {/* Content Section */}
       <div className="container mx-auto px-4 py-8">
         {/* Filters */}
-      <div className="bg-dark-gray p-6 rounded-lg mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Search</label>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search movies..."
-              className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Genre</label>
-            <select
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">All Genres</option>
-              {genres.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Min Rating</label>
-            <select
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-              className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">All Ratings</option>
-              <option value="4">4+ Stars</option>
-              <option value="3">3+ Stars</option>
-              <option value="2">2+ Stars</option>
-            </select>
+        <div className="bg-dark-gray p-6 rounded-lg mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Search</label>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search movies..."
+                className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Genre</label>
+              <select
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">All Genres</option>
+                {genres.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Min Rating</label>
+              <select
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                className="w-full px-4 py-2 rounded bg-dark text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">All Ratings</option>
+                <option value="4">4+ Stars</option>
+                <option value="3">3+ Stars</option>
+                <option value="2">2+ Stars</option>
+              </select>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Movies Grid */}
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      ) : movies.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {movies.map((movie) => (
-            <MovieCard
-              key={movie._id}
-              movie={movie}
-              availableShows={availabilityMap[movie._id] || []}
-              onBook={handleBookTickets}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-400 text-xl">No movies found</p>
-        </div>
-      )}
+        {/* Movies Grid */}
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : movies.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {movies.map((movie) => (
+              <MovieCard
+                key={movie._id}
+                movie={movie}
+                availableShows={availabilityMap[movie._id] || []}
+                onBook={handleBookTickets}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-xl">No movies found</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -40,8 +40,8 @@ const PaymentSuccess = () => {
 
         try {
             const canvas = await html2canvas(ticketRef.current, {
-                backgroundColor: '#1a1a1a', // Match dark theme
-                scale: 2, // Higher quality
+                backgroundColor: '#1a1a1a',
+                scale: 2,
             });
 
             const image = canvas.toDataURL('image/png');
@@ -100,16 +100,16 @@ const PaymentSuccess = () => {
 
                         <div className="flex gap-6 mb-6">
                             <img
-                                src={booking.movieId.poster}
-                                alt={booking.movieId.title}
+                                src={booking.movieId?.poster || 'https://via.placeholder.com/150'}
+                                alt={booking.movieId?.title || 'Unknown Movie'}
                                 className="w-32 h-48 object-cover rounded"
                                 crossOrigin="anonymous"
                             />
                             <div className="space-y-3">
-                                <h3 className="text-2xl font-bold text-white">{booking.movieId.title}</h3>
+                                <h3 className="text-2xl font-bold text-white">{booking.movieId?.title || 'Unknown Movie'}</h3>
                                 <p className="text-gray-300">
                                     <span className="text-gray-500 block text-sm">Theatre</span>
-                                    {booking.theatreId.name}, {booking.theatreId.location}
+                                    {booking.theatreId?.name || 'Unknown Theatre'}, {booking.theatreId?.location || 'Unknown Location'}
                                 </p>
                                 <p className="text-gray-300">
                                     <span className="text-gray-500 block text-sm">Showtime</span>
