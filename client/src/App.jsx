@@ -12,6 +12,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import SeatSelection from './pages/SeatSelection';
 import Payment from './pages/Payment';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
@@ -50,6 +52,22 @@ function App() {
                 }
               />
               <Route
+                path="/payment/success"
+                element={
+                  <PrivateRoute>
+                    <PaymentSuccess />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/payment/failure"
+                element={
+                  <PrivateRoute>
+                    <PaymentFailure />
+                  </PrivateRoute>
+                }
+              />
+              <Route
                 path="/payment/:bookingId"
                 element={
                   <PrivateRoute>
@@ -83,4 +101,3 @@ function App() {
 }
 
 export default App;
-
