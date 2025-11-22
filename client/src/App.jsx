@@ -21,6 +21,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminBanners from './pages/AdminBanners';
 import NotFound from './pages/NotFound';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
@@ -106,6 +107,23 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#1a1a1a',
+                color: '#fff',
+                border: '1px solid #d4af37',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#d4af37',
+                  secondary: '#1a1a1a',
+                },
+              },
+            }}
+          />
         </div>
       </Router>
     </AuthProvider>

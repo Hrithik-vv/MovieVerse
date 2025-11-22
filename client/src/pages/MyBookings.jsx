@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const ITEMS_PER_PAGE = 6;
@@ -36,8 +37,9 @@ const MyBookings = () => {
         try {
             await axios.put(`${API_URL}/api/bookings/${bookingId}/cancel`);
             fetchBookings();
+            toast.success('Booking cancelled successfully');
         } catch (error) {
-            alert('Error cancelling booking');
+            toast.error('Error cancelling booking');
         }
     };
 
@@ -126,8 +128,8 @@ const MyBookings = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className={`px-8 py-3 rounded-full font-semibold transition-all duration-300 ${filterStatus === status
-                                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-400/30'
-                                    : 'glass text-gray-300 hover:bg-yellow-400/10 border border-yellow-400/20'
+                                ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-400/30'
+                                : 'glass text-gray-300 hover:bg-yellow-400/10 border border-yellow-400/20'
                                 }`}
                         >
                             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -211,21 +213,21 @@ const MyBookings = () => {
                                                 <div className="grid md:grid-cols-2 gap-6 text-gray-300">
                                                     <div className="space-y-4">
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">🎭</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Theatre</p>
                                                                 <p className="font-semibold text-white">{booking.theatreId?.name || 'Unknown Theatre'}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">📍</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Location</p>
                                                                 <p>{booking.theatreId?.location || 'Unknown Location'}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">📅</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Showtime</p>
                                                                 <p className="font-semibold">{new Date(booking.showtime).toLocaleString()}</p>
@@ -234,7 +236,7 @@ const MyBookings = () => {
                                                     </div>
                                                     <div className="space-y-4">
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">🎟️</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Seats</p>
                                                                 <p className="font-semibold text-white">
@@ -243,14 +245,14 @@ const MyBookings = () => {
                                                             </div>
                                                         </div>
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">💰</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Total Amount</p>
                                                                 <p className="font-bold text-2xl text-yellow-400">₹{booking.totalPrice}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-start gap-3">
-                                                            <span className="text-yellow-400 text-xl">🏷️</span>
+
                                                             <div>
                                                                 <p className="text-gray-500 text-sm mb-1">Booking ID</p>
                                                                 <p className="text-xs font-mono text-gray-400">{booking._id.slice(-8).toUpperCase()}</p>
@@ -277,8 +279,8 @@ const MyBookings = () => {
                                     onClick={() => handlePageChange(currentPage - 1)}
                                     disabled={currentPage === 1}
                                     className={`px-6 py-3 rounded-full font-semibold transition-all ${currentPage === 1
-                                            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                            : 'glass border border-yellow-400/20 text-white hover:bg-yellow-400/10'
+                                        ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                        : 'glass border border-yellow-400/20 text-white hover:bg-yellow-400/10'
                                         }`}
                                 >
                                     Previous
@@ -296,8 +298,8 @@ const MyBookings = () => {
                                                 key={pageNumber}
                                                 onClick={() => handlePageChange(pageNumber)}
                                                 className={`w-12 h-12 rounded-full font-semibold transition-all ${currentPage === pageNumber
-                                                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-400/30'
-                                                        : 'glass border border-yellow-400/20 text-gray-300 hover:bg-yellow-400/10'
+                                                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black shadow-lg shadow-yellow-400/30'
+                                                    : 'glass border border-yellow-400/20 text-gray-300 hover:bg-yellow-400/10'
                                                     }`}
                                             >
                                                 {pageNumber}
@@ -313,8 +315,8 @@ const MyBookings = () => {
                                     onClick={() => handlePageChange(currentPage + 1)}
                                     disabled={currentPage === totalPages}
                                     className={`px-6 py-3 rounded-full font-semibold transition-all ${currentPage === totalPages
-                                            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                            : 'glass border border-yellow-400/20 text-white hover:bg-yellow-400/10'
+                                        ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                                        : 'glass border border-yellow-400/20 text-white hover:bg-yellow-400/10'
                                         }`}
                                 >
                                     Next
@@ -340,7 +342,7 @@ const MyBookings = () => {
                                 transition={{ type: 'spring', duration: 0.6 }}
                                 className="w-32 h-32 mx-auto mb-8 rounded-full bg-yellow-400/10 flex items-center justify-center"
                             >
-                                <span className="text-6xl">🎟️</span>
+                                <h3 className="text-2xl font-bold text-gray-300 mb-4">No Bookings Yet</h3>
                             </motion.div>
                             <p className="text-gray-400 text-2xl font-light mb-8">
                                 {filterStatus === 'all'

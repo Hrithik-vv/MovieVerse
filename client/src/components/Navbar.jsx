@@ -194,13 +194,6 @@ const Navbar = () => {
                           Banners
                         </Link>
                       )}
-                      <Link
-                        to="/profile"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="block px-6 py-3 text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-400 transition-all duration-200 border-b border-white/5"
-                      >
-                        Profile
-                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-6 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"

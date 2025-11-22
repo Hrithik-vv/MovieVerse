@@ -33,7 +33,7 @@ const Footer = () => {
               {[
                 { icon: '📧', label: 'Email' },
                 { icon: '📱', label: 'Social' },
-                { icon: '🎬', label: 'Theater' }
+                { icon: '', label: 'Theater' }
               ].map((item, index) => (
                 <motion.button
                   key={index}

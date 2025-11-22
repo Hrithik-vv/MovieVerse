@@ -5,6 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -142,8 +143,9 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`${API_URL}/api/movies/${id}`);
       fetchMovies();
+      toast.success('Movie deleted successfully');
     } catch (error) {
-      alert('Error deleting movie');
+      toast.error('Error deleting movie');
     }
   };
 
@@ -184,8 +186,9 @@ const AdminDashboard = () => {
       }
       setShowMovieModal(false);
       fetchMovies();
+      toast.success(editingMovie ? 'Movie updated successfully' : 'Movie created successfully');
     } catch (error) {
-      alert('Error saving movie');
+      toast.error('Error saving movie');
     }
   };
 
@@ -195,8 +198,9 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`${API_URL}/api/theatres/${id}`);
       fetchTheatres();
+      toast.success('Theatre deleted successfully');
     } catch (error) {
-      alert('Error deleting theatre');
+      toast.error('Error deleting theatre');
     }
   };
 
@@ -231,15 +235,16 @@ const AdminDashboard = () => {
       }
       setShowTheatreModal(false);
       fetchTheatres();
+      toast.success(editingTheatre ? 'Theatre updated successfully' : 'Theatre created successfully');
     } catch (error) {
-      alert('Error saving theatre');
+      toast.error('Error saving theatre');
     }
   };
 
   const addShow = async (theatreId) => {
     try {
       if (!showForm.movieId || !showForm.showtime || !showForm.screen || !showForm.price) {
-        alert('Fill all show fields');
+        toast.error('Please fill all show fields');
         return;
       }
       const payload = {
@@ -251,8 +256,9 @@ const AdminDashboard = () => {
       await axios.post(`${API_URL}/api/theatres/${theatreId}/shows`, payload);
       setShowForm({ movieId: '', showtime: '', screen: '', price: '' });
       fetchTheatres();
+      toast.success('Show added successfully');
     } catch (error) {
-      alert('Error adding show');
+      toast.error('Error adding show');
     }
   };
 
@@ -270,8 +276,9 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`${API_URL}/api/theatres/${theatreId}/shows/${showId}`);
       fetchTheatres();
+      toast.success('Show deleted successfully');
     } catch (error) {
-      alert('Error deleting show');
+      toast.error('Error deleting show');
     }
   };
 
@@ -279,8 +286,9 @@ const AdminDashboard = () => {
     try {
       await axios.put(`${API_URL}/api/users/${id}/block`);
       fetchUsers();
+      toast.success('User status updated successfully');
     } catch (error) {
-      alert('Error blocking user');
+      toast.error('Error blocking user');
     }
   };
 
@@ -289,8 +297,9 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`${API_URL}/api/users/${id}`);
       fetchUsers();
+      toast.success('User deleted successfully');
     } catch (error) {
-      alert('Error deleting user');
+      toast.error('Error deleting user');
     }
   };
 
@@ -429,10 +438,10 @@ const AdminDashboard = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}`, icon: '💰', color: 'from-green-500/20 to-emerald-500/20' },
-                    { label: 'Total Bookings', value: bookings.length, icon: '🎟️', color: 'from-blue-500/20 to-cyan-500/20' },
-                    { label: 'Active Users', value: users.filter(u => !u.blocked).length, icon: '👥', color: 'from-purple-500/20 to-pink-500/20' },
-                    { label: 'Movies Listed', value: movies.length, icon: '🎬', color: 'from-yellow-500/20 to-orange-500/20' }
+                    { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}`, color: 'from-green-500/20 to-emerald-500/20' },
+                    { label: 'Total Bookings', value: bookings.length, color: 'from-blue-500/20 to-cyan-500/20' },
+                    { label: 'Active Users', value: users.filter(u => !u.blocked).length, color: 'from-purple-500/20 to-pink-500/20' },
+                    { label: 'Movies Listed', value: movies.length, color: 'from-yellow-500/20 to-orange-500/20' }
                   ].map((stat, index) => (
                     <motion.div
                       key={stat.label}
@@ -707,7 +716,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-                <Pagination 
+                <Pagination
                   currentPage={theatresPage}
                   totalItems={theatres.length}
                   onPageChange={setTheatresPage}

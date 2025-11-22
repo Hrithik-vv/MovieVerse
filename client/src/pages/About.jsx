@@ -84,7 +84,7 @@ const About = () => {
                 whileHover={{ scale: 1.05 }}
                 className="bg-dark-gray p-6 rounded-lg border border-gray-800 hover:border-primary transition-colors"
               >
-                <div className="text-primary text-3xl mb-4">🎬</div>
+                <div className="text-primary text-3xl mb-4"></div>
                 <h3 className="text-xl font-bold mb-3 text-white">Extensive Movie Library</h3>
                 <p className="text-gray-300">
                   Browse through a vast collection of movies, from the latest releases to
@@ -120,7 +120,7 @@ const About = () => {
                 whileHover={{ scale: 1.05 }}
                 className="bg-dark-gray p-6 rounded-lg border border-gray-800 hover:border-primary transition-colors"
               >
-                <div className="text-primary text-3xl mb-4">⭐</div>
+                <div className="text-primary text-3xl mb-4"></div>
                 <h3 className="text-xl font-bold mb-3 text-white">Reviews & Ratings</h3>
                 <p className="text-gray-300">
                   Read reviews and ratings from other movie enthusiasts to help you decide

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AuthContext from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -59,7 +60,7 @@ const SeatSelection = () => {
     }
 
     if (selectedSeats.length === 0) {
-      alert('Please select at least one seat');
+      toast.error('Please select at least one seat');
       return;
     }
 
@@ -85,7 +86,7 @@ const SeatSelection = () => {
 
       navigate(`/payment/${res.data._id}`);
     } catch (error) {
-      alert(error.response?.data?.message || 'Error creating booking');
+      toast.error(error.response?.data?.message || 'Error creating booking');
     }
   };
 
@@ -134,10 +135,9 @@ const SeatSelection = () => {
                   disabled={isBooked}
                   className={`
                     w-8 h-8 rounded text-xs
-                    ${
-                      isBooked
-                        ? 'bg-red-600 cursor-not-allowed'
-                        : isSelected
+                    ${isBooked
+                      ? 'bg-red-600 cursor-not-allowed'
+                      : isSelected
                         ? 'bg-green-600 hover:bg-green-500'
                         : 'bg-gray-600 hover:bg-gray-500'
                     }

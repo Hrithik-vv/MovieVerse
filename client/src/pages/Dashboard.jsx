@@ -59,12 +59,6 @@ const Dashboard = () => {
               <p className="text-gray-500 text-sm mb-2">Email</p>
               <p className="text-white text-xl font-semibold">{user?.email}</p>
             </div>
-            {user?.role && (
-              <div className="bg-black/30 p-6 rounded-lg border border-gray-700">
-                <p className="text-gray-500 text-sm mb-2">Role</p>
-                <p className="text-white text-xl font-semibold capitalize">{user?.role}</p>
-              </div>
-            )}
           </div>
         </motion.div>
 

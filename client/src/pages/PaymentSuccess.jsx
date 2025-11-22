@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import html2canvas from 'html2canvas';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -51,7 +52,7 @@ const PaymentSuccess = () => {
             link.click();
         } catch (error) {
             console.error('Error generating ticket:', error);
-            alert('Failed to download ticket');
+            toast.error('Failed to download ticket');
         }
     };
 
