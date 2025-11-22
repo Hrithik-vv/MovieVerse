@@ -16,7 +16,7 @@ const app = express();
 // Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, 
+  contentSecurityPolicy: false,
 }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -33,7 +33,6 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/theatres', require('./routes/theatreRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
-app.use('/api/tmdb', require('./routes/tmdbRoutes'));
 app.use('/api/banners', bannerRoutes);
 
 

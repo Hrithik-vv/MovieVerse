@@ -36,10 +36,6 @@ const movieSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  tmdbId: {
-    type: Number,
-    default: null,
-  },
 }, {
   timestamps: true,
 });

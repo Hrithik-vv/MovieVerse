@@ -20,6 +20,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminBanners from './pages/AdminBanners';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -100,6 +101,8 @@ function App() {
                   </AdminRoute>
                 }
               />
+              {/* 404 Catch-all Route */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Footer />

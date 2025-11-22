@@ -1,108 +1,56 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import MovieCard from '../components/MovieCard';
 import AuthContext from '../context/AuthContext';
 import { mapShowsByMovie, pickNextShow } from '../utils/showHelpers';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Home = () => {
-  const [trendingMovies, setTrendingMovies] = useState([]);
   const [dbMovies, setDbMovies] = useState([]);
   const [availableMovies, setAvailableMovies] = useState([]);
   const [availabilityMap, setAvailabilityMap] = useState({});
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [adminBanners, setAdminBanners] = useState([]);
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const sliderRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
+  // Set page title
   useEffect(() => {
     document.title = 'Home - MovieVerse';
   }, []);
 
+  // Fetch movies, availability, and set state
   useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const [dbRes, theatresRes] = await Promise.all([
+          axios.get(`${API_URL}/api/movies`),
+          axios.get(`${API_URL}/api/theatres`),
+        ]);
+        setDbMovies(dbRes.data);
+        const availability = mapShowsByMovie(theatresRes.data);
+        setAvailabilityMap(availability);
+        const moviesWithShows = dbRes.data.filter(movie => availability[movie._id]?.length);
+        setAvailableMovies(moviesWithShows);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchMovies();
   }, []);
 
-  const handleBookTickets = (movie, shows = []) => {
-    if (!movie) return;
-
-    if (!movie._id || shows.length === 0) {
-      navigate(`/movies/${movie._id || movie.id}`);
-      return;
-    }
-
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    const targetShow = pickNextShow(shows);
-
-    if (!targetShow) {
-      navigate(`/movies/${movie._id}`);
-      return;
-    }
-
-    navigate(`/book/${movie._id}/${targetShow.theatreId}/${targetShow.showId}`);
-  };
-
-  const fetchMovies = async () => {
-    try {
-      const [trendingRes, dbRes, theatresRes] = await Promise.all([
-        axios.get(`${API_URL}/api/tmdb/trending`),
-        axios.get(`${API_URL}/api/movies`),
-        axios.get(`${API_URL}/api/theatres`),
-      ]);
-      setTrendingMovies(trendingRes.data.slice(0, 10));
-      setDbMovies(dbRes.data);
-
-      const availability = mapShowsByMovie(theatresRes.data);
-      setAvailabilityMap(availability);
-
-      const moviesWithShows = dbRes.data.filter(
-        (movie) => availability[movie._id]?.length
-      );
-      setAvailableMovies(moviesWithShows);
-    } catch (error) {
-      console.error('Error fetching movies:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    try {
-      const res = await axios.get(`${API_URL}/api/tmdb/search?query=${searchQuery}`);
-      setTrendingMovies(res.data);
-    } catch (error) {
-      console.error('Error searching movies:', error);
-    }
-  };
-
-  const displayMovies =
-    availableMovies.length > 0
-      ? availableMovies
-      : dbMovies.length > 0
-      ? dbMovies
-      : trendingMovies;
-
-  // Get newest 3 admin-added movies (sorted by createdAt desc already)
-  const newlyAddedMovies = dbMovies.slice(0, 3);
-
-  // Prefer admin-provided banners if available, fallback to TMDB backdrops
-  const [adminBanners, setAdminBanners] = useState([]);
+  // Load active banners
   useEffect(() => {
     const loadBanners = async () => {
       try {
         const res = await axios.get(`${API_URL}/api/banners/active`);
-        console.log('Loaded banners:', res.data);
         setAdminBanners(res.data || []);
       } catch (e) {
         console.error('Error loading banners:', e);
@@ -112,117 +60,132 @@ const Home = () => {
     loadBanners();
   }, []);
 
-  // Get banner data or just image URLs
-  const bannerData = adminBanners.length > 0
-    ? adminBanners.map((b) => ({
-        imageUrl: `${API_URL}${b.imageUrl}`,
-        title: b.title,
-        subtitle: b.subtitle,
-      }))
-    : (trendingMovies || [])
-        .filter((m) => m.backdrop_path)
-        .map((m) => ({
-          imageUrl: `https://image.tmdb.org/t/p/original${m.backdrop_path}`,
-          title: null,
-          subtitle: null,
-        }))
-        .slice(0, 5);
+  // Determine movies to display
+  const displayMovies =
+    availableMovies.length > 0
+      ? availableMovies
+      : dbMovies;
 
-  const slideshowImages = bannerData.map((b) => b.imageUrl);
+  // Prepare banner data
+  const bannerData = adminBanners.map(b => ({
+    imageUrl: `${API_URL}${b.imageUrl}`,
+    title: b.title,
+    subtitle: b.subtitle,
+  }));
+
+  const slideshowImages = bannerData.map(b => b.imageUrl);
 
   // Reset slide when images change
   useEffect(() => {
     setCurrentSlide(0);
   }, [slideshowImages.length]);
 
-  // Auto-rotate slideshow if more than 1 image
+  // Auto‑rotate slideshow (banner)
   useEffect(() => {
     if (slideshowImages.length < 2) return;
     const id = setInterval(() => {
-      setCurrentSlide((s) => (s + 1) % slideshowImages.length);
+      setCurrentSlide(s => (s + 1) % slideshowImages.length);
     }, 4500);
     return () => clearInterval(id);
   }, [slideshowImages.length]);
 
-  return (
-    <div>
-      {/* Page Title Section */}
-      <motion.section
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-gradient-to-r from-primary/20 via-dark-gray to-primary/20 py-16"
-      >
-        <div className="container mx-auto px-4 text-center">
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent"
-          >
-            Discover Your Next Favorite Movie
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto"
-          >
-            Your Ultimate Destination for Movie Entertainment
-          </motion.p>
-        </div>
-      </motion.section>
+  // Auto-scroll movie slider
+  useEffect(() => {
+    if (displayMovies.length <= 3) return;
+    const id = setInterval(() => {
+      setSliderIndex(prev => (prev + 1) % Math.max(1, displayMovies.length - 2));
+    }, 5000);
+    return () => clearInterval(id);
+  }, [displayMovies.length]);
 
-      {/* Hero Section */}
-      <section className="relative min-h-[520px] flex items-center bg-black overflow-hidden">
-        {slideshowImages.length > 0 ? (
-          slideshowImages.map((src, i) => (
-            <motion.img
-              key={`${src}-${i}`}
-              src={src}
+  // Book tickets helper
+  const handleBookTickets = (movie, shows = []) => {
+    if (!movie) return;
+    if (!movie._id || shows.length === 0) {
+      navigate(`/movies/${movie._id || movie.id}`);
+      return;
+    }
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const targetShow = pickNextShow(shows);
+    if (!targetShow) {
+      navigate(`/movies/${movie._id}`);
+      return;
+    }
+    navigate(`/book/${movie._id}/${targetShow.theatreId}/${targetShow.showId}`);
+  };
+
+  // Slider navigation
+  const handleSliderPrev = () => {
+    setSliderIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const handleSliderNext = () => {
+    setSliderIndex(prev => Math.min(displayMovies.length - 3, prev + 1));
+  };
+
+  const canSliderGoPrev = sliderIndex > 0;
+  const canSliderGoNext = sliderIndex < displayMovies.length - 3;
+
+  return (
+    <div className="animate-fade-in">
+      {/* Hero Banner Section */}
+      <section className="relative min-h-[600px] flex items-center bg-black overflow-hidden">
+        <AnimatePresence mode="wait">
+          {slideshowImages.length > 0 ? (
+            slideshowImages.map((src, i) => (
+              currentSlide === i && (
+                <motion.img
+                  key={`${src}-${i}`}
+                  src={src}
+                  alt="hero"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 0.4, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 1 }}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={e => { console.error('Failed to load banner image:', src); e.target.style.display = 'none'; }}
+                />
+              )
+            ))
+          ) : (
+            <img
+              src="/img/hero.jpg"
               alt="hero"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: currentSlide === i ? 0.65 : 0 }}
-              transition={{ duration: 1.2 }}
-              className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => {
-                console.error('Failed to load banner image:', src);
-                e.target.style.display = 'none';
-              }}
+              className="absolute inset-0 h-full w-full object-cover opacity-40"
+              onError={e => { e.currentTarget.src = '/img/placeholder.png'; }}
             />
-          ))
-        ) : (
-          <img
-            src="/img/hero.jpg"
-            alt="hero"
-            className="absolute inset-0 h-full w-full object-cover opacity-60"
-            onError={(e) => {
-              e.currentTarget.src =
-                '/img/ChatGPT Image Nov 5, 2025, 11_37_11 AM.png';
-            }}
-          />
-        )}
-        <div className="absolute inset-0 bg-black/40"></div>
+          )}
+        </AnimatePresence>
+
+        {/* Gradient overlays for classic look */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
+
         <div className="relative z-10 container mx-auto px-4 text-center">
           {bannerData.length > 0 && bannerData[currentSlide] ? (
             <>
               {bannerData[currentSlide].title && (
                 <motion.h1
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
                   key={`title-${currentSlide}`}
-                  className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4 text-white"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="text-6xl md:text-8xl font-bold tracking-tight mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 drop-shadow-2xl"
                 >
                   {bannerData[currentSlide].title}
                 </motion.h1>
               )}
               {bannerData[currentSlide].subtitle && (
                 <motion.p
+                  key={`subtitle-${currentSlide}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  key={`subtitle-${currentSlide}`}
-                  className="text-lg md:text-xl text-gray-300 mb-8"
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="text-xl md:text-2xl text-gray-200 mb-8 font-light tracking-wide"
+                  style={{ fontFamily: 'Lato, sans-serif' }}
                 >
                   {bannerData[currentSlide].subtitle}
                 </motion.p>
@@ -231,199 +194,199 @@ const Home = () => {
           ) : (
             <>
               <motion.h1
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4"
+                transition={{ duration: 0.8 }}
+                className="text-6xl md:text-8xl font-bold tracking-tight mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 drop-shadow-2xl"
               >
-                THE SEVENTH DAY
+                MovieVerse
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-lg md:text-xl text-gray-300 mb-8"
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-xl md:text-2xl text-gray-200 mb-8 font-light tracking-wide"
+                style={{ fontFamily: 'Lato, sans-serif' }}
               >
-                Written and Directed by Aleesha Rose / Ireland 2023
+                Where Classic Cinema Meets Modern Elegance
               </motion.p>
             </>
           )}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for movies..."
-                className="flex-1 px-4 py-3 rounded-lg bg-dark-gray text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="submit"
-                className="bg-primary hover:bg-red-700 text-white px-8 py-3 rounded-lg transition-colors"
-              >
-                Search
-              </button>
-            </div>
-          </form>
+
+          {/* Decorative line */}
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: '200px' }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="h-0.5 bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto"
+          />
         </div>
+
+        {/* Banner navigation dots */}
+        {slideshowImages.length > 1 && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-20">
+            {slideshowImages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentSlide(i)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide
+                    ? 'bg-yellow-400 w-8'
+                    : 'bg-white/40 hover:bg-white/60'
+                  }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Newly Added Movies Section */}
-      <section className="container mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <motion.h2
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent"
-          >
-            Recommended
-          </motion.h2>
+      {/* Featured Movies Slider Section */}
+      <section className="relative py-16 bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="container mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, width: 0 }}
-            whileInView={{ opacity: 1, width: '100%' }}
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto max-w-md"
-          />
-        </motion.div>
+            transition={{ duration: 0.6 }}
+            className="mb-12"
+          >
+            <h2 className="text-5xl md:text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200">
+              Featured Movies
+            </h2>
+            <div className="h-1 w-32 bg-gradient-to-r from-yellow-400 to-transparent" />
+          </motion.div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : newlyAddedMovies.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-          >
-            {newlyAddedMovies.map((movie, index) => {
-              const shows = availabilityMap[movie._id] || [];
-              return (
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-4 border-yellow-400/20" />
+                <div className="absolute inset-0 rounded-full border-4 border-t-yellow-400 animate-spin" />
+              </div>
+            </div>
+          ) : displayMovies.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20"
+            >
+              <p className="text-gray-400 text-2xl font-light">No movies available at the moment.</p>
+            </motion.div>
+          ) : (
+            <div className="relative">
+              {/* Slider Container */}
+              <div className="overflow-hidden">
                 <motion.div
-                  key={movie._id}
-                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    duration: 0.5,
-                    delay: index * 0.2,
-                    type: 'spring',
-                    stiffness: 100,
-                  }}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  className="group relative"
+                  ref={sliderRef}
+                  className="flex gap-8"
+                  animate={{ x: `-${sliderIndex * (100 / 3)}%` }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 >
-                  <div className="relative rounded-2xl overflow-hidden bg-dark-gray shadow-2xl border border-gray-800 hover:border-primary transition-all duration-300">
-                    <Link
-                      to={`/movies/${movie._id}`}
-                      className="block cursor-pointer"
-                    >
-                      <div className="relative overflow-hidden">
-                        <img
-                          src={movie.poster || 'https://via.placeholder.com/500x750?text=No+Image'}
-                          alt={movie.title}
-                          className="w-full h-96 object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/500x750?text=No+Image';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          whileHover={{ opacity: 1, y: 0 }}
-                          className="absolute inset-x-0 bottom-0 p-6"
-                        >
-                          <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
-                            {movie.title}
-                          </h3>
-                          <p className="text-gray-200 text-sm line-clamp-2 drop-shadow-md">
-                            {movie.description || 'No description available.'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-3">
-                            <span className="bg-primary/90 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                              ⭐ {movie.rating ? movie.rating.toFixed(1) : 'N/A'}
-                            </span>
-                            {movie.genre && movie.genre.length > 0 && (
-                              <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
-                                {movie.genre[0]}
-                              </span>
+                  {displayMovies.map((movie, index) => {
+                    const shows = availabilityMap[movie._id] || [];
+                    return (
+                      <motion.div
+                        key={movie._id}
+                        className="min-w-[calc(33.33%-1.33rem)] md:min-w-[calc(33.33%-1.33rem)]"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      >
+                        <div className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black shadow-2xl border border-yellow-400/20 hover:border-yellow-400/60 transition-all duration-500 transform hover:scale-105 hover:shadow-yellow-400/30">
+                          <Link to={`/movies/${movie._id}`} className="block">
+                            <div className="relative overflow-hidden aspect-[2/3]">
+                              <img
+                                src={movie.poster || 'https://via.placeholder.com/400x600?text=No+Image'}
+                                alt={movie.title}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                onError={e => { e.target.src = 'https://via.placeholder.com/400x600?text=No+Image'; }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                              {/* Movie info overlay */}
+                              <div className="absolute inset-x-0 bottom-0 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                                <h3 className="text-2xl font-bold text-yellow-400 mb-2 drop-shadow-lg">
+                                  {movie.title}
+                                </h3>
+                                <p className="text-gray-200 text-sm line-clamp-2 mb-3">
+                                  {movie.description || 'No description available.'}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <span className="bg-yellow-400/90 text-black px-3 py-1 rounded-full text-sm font-semibold">
+                                    ⭐ {movie.rating ? movie.rating.toFixed(1) : 'N/A'}
+                                  </span>
+                                  {movie.genre && movie.genre.length > 0 && (
+                                    <span className="glass text-white px-3 py-1 rounded-full text-xs">
+                                      {movie.genre[0]}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Play icon */}
+                              <div className="absolute top-4 right-4 bg-yellow-400/90 text-black p-3 rounded-full shadow-xl opacity-0 group-hover:opacity-100 transform scale-0 group-hover:scale-100 transition-all duration-300">
+                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z" />
+                                </svg>
+                              </div>
+                            </div>
+                          </Link>
+
+                          <div className="p-6 bg-gradient-to-b from-gray-900 to-black">
+                            {shows.length > 0 ? (
+                              <button
+                                onClick={() => handleBookTickets(movie, shows)}
+                                className="btn-classic w-full"
+                              >
+                                Book Tickets
+                              </button>
+                            ) : (
+                              <Link
+                                to={`/movies/${movie._id}`}
+                                className="block w-full glass text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 text-center hover:bg-white/10"
+                              >
+                                View Details
+                              </Link>
                             )}
                           </div>
-                        </motion.div>
-                        <motion.div
-                          initial={{ scale: 0, rotate: -180 }}
-                          whileHover={{ scale: 1, rotate: 0 }}
-                          className="absolute top-4 right-4 bg-primary text-white p-3 rounded-full shadow-xl"
-                        >
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </motion.div>
-                      </div>
-                    </Link>
-                    <div className="p-6 bg-dark-gray/50 backdrop-blur-sm">
-                      {shows.length > 0 ? (
-                        <button
-                          onClick={() => handleBookTickets(movie, shows)}
-                          className="w-full bg-gradient-to-r from-primary to-red-600 hover:from-red-600 hover:to-primary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                          Book Tickets Now
-                        </button>
-                      ) : (
-                        <Link
-                          to={`/movies/${movie._id}`}
-                          className="block w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-300 text-center"
-                        >
-                          View Details
-                        </Link>
-                      )}
-                    </div>
-                  </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
-              );
-            })}
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-gray-400 text-xl">
-              No newly added movies yet. Check back soon!
-            </p>
-          </motion.div>
-        )}
+              </div>
+
+              {/* Navigation Buttons */}
+              {displayMovies.length > 3 && (
+                <>
+                  <button
+                    onClick={handleSliderPrev}
+                    disabled={!canSliderGoPrev}
+                    className="slider-button prev"
+                    aria-label="Previous movies"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleSliderNext}
+                    disabled={!canSliderGoNext}
+                    className="slider-button next"
+                    aria-label="Next movies"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
 };
 
 export default Home;
-

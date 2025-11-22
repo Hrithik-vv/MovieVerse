@@ -21,12 +21,7 @@ const MovieCard = ({ movie, availableShows = [], onBook }) => {
       <Link to={movieLink} className="block cursor-pointer">
         <div className="relative">
           <img
-            src={
-              movie.poster ||
-              (movie.poster_path
-                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                : 'https://via.placeholder.com/500x750?text=No+Image')
-            }
+            src={movie.poster || 'https://via.placeholder.com/500x750?text=No+Image'}
             alt={movie.title}
             className="w-full h-80 object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
@@ -36,7 +31,7 @@ const MovieCard = ({ movie, availableShows = [], onBook }) => {
           <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
             <h3 className="text-xl font-semibold">{movie.title}</h3>
             <p className="text-gray-300 text-sm line-clamp-2">
-              {movie.description || movie.overview || 'No description available.'}
+              {movie.description || 'No description available.'}
             </p>
           </div>
           <div className="absolute top-2 right-2 bg-primary text-white px-2 py-1 rounded">

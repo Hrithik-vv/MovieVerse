@@ -39,98 +39,107 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
-          ? 'bg-dark-gray/95 backdrop-blur-md shadow-xl py-2'
-          : 'bg-dark-gray shadow-lg py-3'
+      className={`sticky top-0 z-50 transition-all duration-500 ${isScrolled
+        ? 'glass shadow-lg py-2 border-b border-yellow-400/20'
+        : 'bg-gradient-to-r from-black via-gray-900 to-black shadow-xl py-3'
         }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           {/* Logo - Left */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-3 group">
             <motion.div
-              className="h-8 w-8 md:h-10 md:w-10 shrink-0"
+              className="h-10 w-10 md:h-12 md:w-12 shrink-0"
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: 'spring', stiffness: 400 }}
             >
               <img
                 src="/img/ChatGPT Image Nov 5, 2025, 11_37_11 AM.png"
                 alt="MovieVerse logo"
-                className="object-contain h-full w-full"
+                className="object-contain h-full w-full drop-shadow-lg"
               />
             </motion.div>
             <motion.span
-              className="hidden sm:inline text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-primary via-red-500 to-primary bg-clip-text text-transparent drop-shadow-lg"
-              whileHover={{ scale: 1.05, textShadow: '0 0 20px rgba(229, 9, 20, 0.8)' }}
+              className="hidden sm:inline text-2xl md:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 drop-shadow-lg"
+              whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 400 }}
+              style={{ fontFamily: 'Playfair Display, serif' }}
             >
               MovieVerse
             </motion.span>
           </Link>
 
-          {/* Navigation Links - Centered */}
-          <div className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/"
-                className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
-              >
-                Home
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/movies"
-                className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
-              >
-                Movies
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/my-bookings"
-                className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
-              >
-                My Bookings
-              </Link>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/about"
-                className="text-gray-300 hover:text-primary hover:underline underline-offset-4 transition-colors duration-200 font-medium"
-              >
-                About
-              </Link>
-            </motion.div>
-          </div>
+          {/* Navigation Links - Centered (conditional based on role) */}
+          {user?.role === 'admin' ? (
+            // Admin navigation - only Dashboard and Banners
+            <div className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+              {[{ label: 'Dashboard', path: '/admin/dashboard' }, { label: 'Banners', path: '/admin/banners' }].map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    to={item.path}
+                    className="relative text-gray-300 hover:text-yellow-400 transition-colors duration-300 font-medium text-lg group"
+                  >
+                    {item.label}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-200 group-hover:w-full transition-all duration-300" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            // Regular user navigation
+            <div className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+              {['Home', 'Movies', 'My Bookings', 'About'].map((item, index) => (
+                <motion.div
+                  key={item}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
+                    className="relative text-gray-300 hover:text-yellow-400 transition-colors duration-300 font-medium text-lg group"
+                  >
+                    {item}
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-200 group-hover:w-full transition-all duration-300" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Mobile Navigation Links */}
-          <div className="flex md:hidden items-center space-x-4">
-            <Link
-              to="/"
-              className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              to="/movies"
-              className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
-            >
-              Movies
-            </Link>
-            <Link
-              to="/my-bookings"
-              className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
-            >
-              My Bookings
-            </Link>
-            <Link
-              to="/about"
-              className="text-gray-300 hover:text-primary transition-colors text-sm font-medium"
-            >
-              About
-            </Link>
-          </div>
+          {user?.role === 'admin' ? (
+            <div className="flex md:hidden items-center space-x-3">
+              <Link to="/admin/dashboard" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium">
+                Dashboard
+              </Link>
+              <Link to="/admin/banners" className="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium">
+                Banners
+              </Link>
+            </div>
+          ) : (
+            <div className="flex md:hidden items-center space-x-3">
+              {['/', '/movies', '/my-bookings', '/about'].map((path, index) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm font-medium"
+                >
+                  {['Home', 'Movies', 'Bookings', 'About'][index]}
+                </Link>
+              ))}
+            </div>
+          )}
+
 
           {/* User Menu - Right */}
           <div className="flex items-center space-x-4">
@@ -138,11 +147,11 @@ const Navbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <motion.button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="bg-primary hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium flex items-center gap-2"
+                  className="btn-classic flex items-center gap-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Log
+                  <span className="hidden sm:inline">{user.name || 'Account'}</span>
                   <motion.svg
                     className="w-4 h-4"
                     fill="none"
@@ -163,16 +172,16 @@ const Navbar = () => {
                 <AnimatePresence>
                   {isDropdownOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 bg-dark-gray rounded-lg shadow-xl border border-gray-700 overflow-hidden"
+                      className="absolute right-0 mt-3 w-56 glass rounded-xl shadow-2xl border border-yellow-400/30 overflow-hidden"
                     >
                       <Link
                         to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
                         onClick={() => setIsDropdownOpen(false)}
-                        className="block px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-primary transition-colors duration-200"
+                        className="block px-6 py-3 text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-400 transition-all duration-200 border-b border-white/5"
                       >
                         Dashboard
                       </Link>
@@ -180,7 +189,7 @@ const Navbar = () => {
                         <Link
                           to="/admin/banners"
                           onClick={() => setIsDropdownOpen(false)}
-                          className="block px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-primary transition-colors duration-200"
+                          className="block px-6 py-3 text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-400 transition-all duration-200 border-b border-white/5"
                         >
                           Banners
                         </Link>
@@ -188,18 +197,16 @@ const Navbar = () => {
                       <Link
                         to="/profile"
                         onClick={() => setIsDropdownOpen(false)}
-                        className="block px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-primary transition-colors duration-200"
+                        className="block px-6 py-3 text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-400 transition-all duration-200 border-b border-white/5"
                       >
                         Profile
                       </Link>
-                      <div className="border-t border-gray-700">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-3 text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors duration-200"
-                        >
-                          Logout
-                        </button>
-                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-6 py-3 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
+                      >
+                        Logout
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -209,7 +216,7 @@ const Navbar = () => {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/login"
-                    className="text-gray-300 hover:text-primary transition-colors duration-200 font-medium"
+                    className="text-gray-300 hover:text-yellow-400 transition-colors duration-200 font-medium"
                   >
                     Login
                   </Link>
@@ -217,7 +224,7 @@ const Navbar = () => {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/register"
-                    className="bg-primary hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+                    className="btn-classic"
                   >
                     Register
                   </Link>
