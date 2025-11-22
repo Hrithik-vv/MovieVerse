@@ -29,7 +29,7 @@ A full-stack MERN application for movie reviews and ticket booking with admin pa
 - MongoDB
 - Mongoose
 - JWT Authentication
-- Razorpay (Payment)
+- PayU (Payment)
 - Nodemailer (Email)
 
 ## Project Structure
@@ -206,4 +206,5 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
 
