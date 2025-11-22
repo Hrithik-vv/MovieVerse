@@ -4,14 +4,14 @@ A full-stack MERN application for movie reviews and ticket booking with admin pa
 
 ## Features
 
-- 🎬 Browse and search movies (TMDb API integration)
-- ⭐ Rate and review movies
-- 🎫 Book tickets with seat selection
-- 💳 Online payment integration (Razorpay)
-- 👤 User authentication (JWT)
-- 🛡️ Admin panel for managing movies, theatres, users, and bookings
-- 📧 Email confirmation for bookings
-- 🎨 Modern dark theme UI with animations
+-  Browse and search movies (TMDb API integration)
+-  Rate and review movies
+-  Book tickets with seat selection
+-  Online payment integration (Razorpay)
+-  User authentication (JWT)
+-  Admin panel for managing movies, theatres, users, and bookings
+-  Email confirmation for bookings
+-  Modern dark theme UI with animations
 
 ## Tech Stack
 
@@ -206,5 +206,6 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
 
 
