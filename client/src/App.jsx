@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import MyBookings from './pages/MyBookings';
+import Profile from './pages/Profile';
 import SeatSelection from './pages/SeatSelection';
 import Payment from './pages/Payment';
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -51,6 +52,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <MyBookings />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Profile />
                   </PrivateRoute>
                 }
               />

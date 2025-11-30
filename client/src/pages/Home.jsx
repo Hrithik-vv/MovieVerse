@@ -60,13 +60,13 @@ const Home = () => {
     loadBanners();
   }, []);
 
-  // Determine movies to display
+  
   const displayMovies =
     availableMovies.length > 0
       ? availableMovies
       : dbMovies;
 
-  // Prepare banner data
+ 
   const bannerData = adminBanners.map(b => ({
     imageUrl: `${API_URL}${b.imageUrl}`,
     title: b.title,
@@ -75,12 +75,12 @@ const Home = () => {
 
   const slideshowImages = bannerData.map(b => b.imageUrl);
 
-  // Reset slide when images change
+
   useEffect(() => {
     setCurrentSlide(0);
   }, [slideshowImages.length]);
 
-  // Auto‑rotate slideshow (banner)
+  
   useEffect(() => {
     if (slideshowImages.length < 2) return;
     const id = setInterval(() => {

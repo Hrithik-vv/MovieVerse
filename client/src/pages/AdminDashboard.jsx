@@ -508,10 +508,10 @@ const AdminDashboard = () => {
                         <XAxis dataKey="name" stroke="#999" />
                         <YAxis stroke="#999" />
                         <Tooltip
-                          contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #d4af37' }}
-                          labelStyle={{ color: '#d4af37' }}
+                          contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #dc143c' }}
+                          labelStyle={{ color: '#dc143c' }}
                         />
-                        <Bar dataKey="revenue" fill="#d4af37" />
+                        <Bar dataKey="revenue" fill="#dc143c" />
                       </BarChart>
                     </ResponsiveContainer>
                   </motion.div>

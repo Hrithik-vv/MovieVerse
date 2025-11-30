@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
-const nodemailer = require('nodemailer');
+const { sendOtpEmail } = require('../utils/emailService');
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'dev-secret';
 
@@ -13,15 +13,29 @@ const generateToken = (id) => {
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide all fields' });
+    }
+
+    // Validate Name (Alphabets and spaces only)
+    if (!/^[a-zA-Z\s]+$/.test(name)) {
+      return res.status(400).json({ message: 'Name must contain only alphabets and spaces (no numbers or special characters)' });
+    }
+
+    // Validate Email Format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // Validate Password Length
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
     const userExists = await User.findOne({ email });
@@ -42,6 +56,7 @@ const register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        walletBalance: user.walletBalance || 0,
         token: generateToken(user._id),
       });
     } else {
@@ -52,9 +67,7 @@ const register = async (req, res) => {
   }
 };
 
-// @desc    Request password reset OTP
-// @route   POST /api/auth/forgot-password/request-otp
-// @access  Public
+
 const requestPasswordOtp = async (req, res) => {
   try {
     const { email } = req.body;
@@ -64,7 +77,7 @@ const requestPasswordOtp = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000);
+    const expires = new Date(Date.now() + 60 * 1000); // 60 seconds
 
     user.resetOtp = otp;
     user.resetOtpExpires = expires;
@@ -73,22 +86,15 @@ const requestPasswordOtp = async (req, res) => {
     // Log OTP to terminal as requested
     console.log('Password reset OTP for', email, ':', otp);
 
-    // Send email if SMTP is configured
+
+    console.log('Checking email config:', {
+      hasUser: !!process.env.EMAIL_USER,
+      hasPass: !!process.env.EMAIL_PASS
+    });
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-        });
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: email,
-          subject: 'Your MovieVerse OTP',
-          text: `Your OTP is ${otp}. It expires in 10 minutes.`,
-        });
-      } catch (emailErr) {
-        console.warn('Failed to send OTP email:', emailErr?.message || emailErr);
-        // Do not fail the request; OTP is stored and logged to terminal.
+      const emailSent = await sendOtpEmail(email, otp);
+      if (!emailSent) {
+        console.warn('Failed to send OTP email via service');
       }
     }
 
@@ -98,9 +104,6 @@ const requestPasswordOtp = async (req, res) => {
   }
 };
 
-// @desc    Reset password with OTP
-// @route   POST /api/auth/forgot-password/reset
-// @access  Public
 const resetPasswordWithOtp = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -147,6 +150,7 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        walletBalance: user.walletBalance || 0,
         token: generateToken(user._id),
       });
     } else {
@@ -186,6 +190,7 @@ const googleLogin = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      walletBalance: user.walletBalance || 0,
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -204,6 +209,7 @@ const getMe = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      walletBalance: user.walletBalance || 0,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

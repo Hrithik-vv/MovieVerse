@@ -8,7 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Payment = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -106,6 +106,34 @@ const Payment = () => {
     }
   };
 
+  const handleWalletPayment = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      await axios.put(
+        `${API_URL}/api/bookings/${bookingId}/payment`,
+        {
+          paymentStatus: 'completed',
+          paymentMethod: 'wallet'
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+
+      // Refresh user data to update wallet balance
+      if (fetchUser) {
+        await fetchUser();
+      }
+
+      navigate(`/payment/success?bookingId=${bookingId}`);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Wallet payment failed');
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -163,15 +191,44 @@ const Payment = () => {
           </div>
         )}
 
-        <button
-          onClick={handleInitiatePayment}
-          className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded transition-colors"
-        >
-          Pay with PayU
-        </button>
+        <div className="space-y-4">
+          {/* Wallet Payment Option */}
+          <div className="bg-black/30 p-4 rounded border border-gray-700">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-gray-300">Wallet Balance</span>
+              <span className="font-bold text-yellow-400">₹{user?.walletBalance || 0}</span>
+            </div>
+            {user?.walletBalance >= booking.totalPrice ? (
+              <button
+                onClick={handleWalletPayment}
+                disabled={loading}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 rounded transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Processing...' : 'Pay with Wallet'}
+              </button>
+            ) : (
+              <button disabled className="w-full bg-gray-700 text-gray-400 py-3 rounded cursor-not-allowed">
+                Insufficient Wallet Balance
+              </button>
+            )}
+          </div>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-gray-700"></div>
+            <span className="flex-shrink-0 mx-4 text-gray-500">OR</span>
+            <div className="flex-grow border-t border-gray-700"></div>
+          </div>
+
+          <button
+            onClick={handleInitiatePayment}
+            className="w-full bg-primary hover:bg-red-700 text-white py-3 rounded transition-colors"
+          >
+            Pay with PayU
+          </button>
+        </div>
 
         <p className="text-sm text-gray-400 mt-4 text-center">
-          You will be redirected to PayU for secure payment
+          Secure payment processing
         </p>
       </div>
     </div>
@@ -179,4 +236,3 @@ const Payment = () => {
 };
 
 export default Payment;
-

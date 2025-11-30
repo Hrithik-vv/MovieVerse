@@ -185,6 +185,13 @@ const Navbar = () => {
                       >
                         Dashboard
                       </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="block px-6 py-3 text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-400 transition-all duration-200 border-b border-white/5"
+                      >
+                        Profile
+                      </Link>
                       {user.role === 'admin' && (
                         <Link
                           to="/admin/banners"

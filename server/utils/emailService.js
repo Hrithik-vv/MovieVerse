@@ -48,5 +48,34 @@ const sendBookingEmail = async (booking) => {
   }
 };
 
-module.exports = sendBookingEmail;
+const sendOtpEmail = async (email, otp) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Your MovieVerse OTP',
+      text: `Your OTP is ${otp}. It expires in 60 seconds.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #e50914;">MovieVerse - Password Reset</h2>
+          <p>You requested a password reset.</p>
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 18px;">Your OTP is: <strong>${otp}</strong></p>
+            <p>This code expires in 60 seconds.</p>
+          </div>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('OTP email sent to', email);
+    return true;
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+    return false;
+  }
+};
+
+module.exports = { sendBookingEmail, sendOtpEmail };
 

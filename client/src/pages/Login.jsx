@@ -61,6 +61,17 @@ const Login = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMsg, setForgotMsg] = useState('');
   const [particles, setParticles] = useState([]);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer]);
 
   useEffect(() => {
     if (!loading && user && pathname === '/login') {
@@ -83,6 +94,13 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validate Email Format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
 
     const result = await login(email, password);
     if (result.success) {
@@ -305,6 +323,7 @@ const Login = () => {
                       if (res.success) {
                         setForgotMsg('OTP sent. Check your email or server console.');
                         setForgotStep(2);
+                        setOtpTimer(60);
                       } else {
                         setForgotMsg(res.message);
                       }
@@ -386,10 +405,35 @@ const Login = () => {
                     Close
                   </button>
                 </div>
+                <div className="mt-4 text-center">
+                  {otpTimer > 0 ? (
+                    <p className="text-gray-400 text-sm">
+                      Resend OTP in <span className="text-red-500 font-bold">{otpTimer}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      className="text-red-500 hover:text-red-400 text-sm font-medium transition-colors"
+                      onClick={async () => {
+                        setForgotLoading(true);
+                        setForgotMsg('');
+                        const res = await requestPasswordOtp(forgotEmail);
+                        setForgotLoading(false);
+                        if (res.success) {
+                          setForgotMsg('OTP resent successfully.');
+                          setOtpTimer(60);
+                        } else {
+                          setForgotMsg(res.message);
+                        }
+                      }}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        </div>
+        </div >
       )}
 
       <style>{`
@@ -435,7 +479,7 @@ const Login = () => {
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </div >
   );
 };
 

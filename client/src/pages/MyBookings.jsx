@@ -10,7 +10,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const ITEMS_PER_PAGE = 6;
 
 const MyBookings = () => {
-    const { user } = useContext(AuthContext);
+    const { user, fetchUser } = useContext(AuthContext);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -35,11 +35,15 @@ const MyBookings = () => {
         if (!window.confirm('Are you sure you want to cancel this booking?')) return;
 
         try {
-            await axios.put(`${API_URL}/api/bookings/${bookingId}/cancel`);
+            const res = await axios.put(`${API_URL}/api/bookings/${bookingId}/cancel`);
             fetchBookings();
-            toast.success('Booking cancelled successfully');
+            // Refresh user data to update wallet balance
+            if (fetchUser) {
+                await fetchUser();
+            }
+            toast.success(res.data.message || 'Booking cancelled successfully. Amount credited to wallet!');
         } catch (error) {
-            toast.error('Error cancelling booking');
+            toast.error(error.response?.data?.message || 'Error cancelling booking');
         }
     };
 
@@ -200,12 +204,28 @@ const MyBookings = () => {
                                                             </Link>
                                                         )}
                                                         {booking.paymentStatus !== 'cancelled' && (
-                                                            <button
-                                                                onClick={() => handleCancelBooking(booking._id)}
-                                                                className="px-6 py-3 rounded-full bg-red-500/20 border border-red-500/40 hover:bg-red-500 text-red-400 hover:text-white transition-all font-semibold"
-                                                            >
-                                                                Cancel
-                                                            </button>
+                                                            (() => {
+                                                                const showtime = new Date(booking.showtime);
+                                                                const now = new Date();
+                                                                const diffHours = (showtime - now) / (1000 * 60 * 60);
+
+                                                                if (diffHours < 2) {
+                                                                    return (
+                                                                        <span className="px-6 py-3 rounded-full bg-gray-500/20 border border-gray-500/40 text-gray-400 font-semibold cursor-not-allowed" title="Cannot cancel within 2 hours of showtime">
+                                                                            Not Cancellable
+                                                                        </span>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        onClick={() => handleCancelBooking(booking._id)}
+                                                                        className="px-6 py-3 rounded-full bg-red-500/20 border border-red-500/40 hover:bg-red-500 text-red-400 hover:text-white transition-all font-semibold"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                );
+                                                            })()
                                                         )}
                                                     </div>
                                                 </div>
