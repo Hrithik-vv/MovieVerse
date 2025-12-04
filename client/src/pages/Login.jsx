@@ -104,7 +104,7 @@ const Login = () => {
 
     const result = await login(email, password);
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     } else {
       setError(result.message);
     }
@@ -254,7 +254,7 @@ const Login = () => {
                 onSuccess={async (credentialResponse) => {
                   const idToken = credentialResponse.credential;
                   const result = await googleLogin(idToken);
-                  if (result.success) navigate('/dashboard', { replace: true });
+                  if (result.success) navigate('/', { replace: true });
                   else setError(result.message);
                 }}
                 onError={() => setError('Google login failed')}

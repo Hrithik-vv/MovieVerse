@@ -58,6 +58,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const { register, googleLogin } = useContext(AuthContext);
   const navigate = useNavigate();
   const [particles, setParticles] = useState([]);
@@ -77,6 +78,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     // Validate Name (Alphabets and spaces only)
     if (!/^[a-zA-Z\s]+$/.test(name)) {
@@ -99,7 +101,10 @@ const Register = () => {
 
     const result = await register(name, email, password);
     if (result.success) {
-      navigate('/dashboard');
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 1500);
     } else {
       setError(result.message);
     }
@@ -159,6 +164,12 @@ const Register = () => {
           {error && (
             <div className="bg-red-500/20 text-red-400 p-3 rounded mb-4 text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-500/20 text-green-400 p-3 rounded mb-4 text-sm">
+              {success}
             </div>
           )}
 
@@ -244,7 +255,7 @@ const Register = () => {
                 onSuccess={async (credentialResponse) => {
                   const idToken = credentialResponse.credential;
                   const result = await googleLogin(idToken);
-                  if (result.success) navigate('/dashboard', { replace: true });
+                  if (result.success) navigate('/', { replace: true });
                   else setError(result.message);
                 }}
                 onError={() => setError('Google login failed')}
