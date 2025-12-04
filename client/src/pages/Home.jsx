@@ -5,7 +5,7 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import { mapShowsByMovie, pickNextShow } from '../utils/showHelpers';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Home = () => {
   const [dbMovies, setDbMovies] = useState([]);
@@ -60,13 +60,13 @@ const Home = () => {
     loadBanners();
   }, []);
 
-  
+
   const displayMovies =
     availableMovies.length > 0
       ? availableMovies
       : dbMovies;
 
- 
+
   const bannerData = adminBanners.map(b => ({
     imageUrl: `${API_URL}${b.imageUrl}`,
     title: b.title,
@@ -80,7 +80,7 @@ const Home = () => {
     setCurrentSlide(0);
   }, [slideshowImages.length]);
 
-  
+
   useEffect(() => {
     if (slideshowImages.length < 2) return;
     const id = setInterval(() => {
@@ -230,8 +230,8 @@ const Home = () => {
                 key={i}
                 onClick={() => setCurrentSlide(i)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide
-                    ? 'bg-yellow-400 w-8'
-                    : 'bg-white/40 hover:bg-white/60'
+                  ? 'bg-yellow-400 w-8'
+                  : 'bg-white/40 hover:bg-white/60'
                   }`}
                 aria-label={`Go to slide ${i + 1}`}
               />

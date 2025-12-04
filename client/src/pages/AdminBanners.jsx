@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const AdminBanners = () => {
   const { user } = useContext(AuthContext);
@@ -110,12 +110,12 @@ const AdminBanners = () => {
 
       <form onSubmit={upload} className="bg-dark-gray p-6 rounded-lg mb-8 grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
-          <input 
+          <input
             ref={fileInputRef}
-            type="file" 
+            type="file"
             accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] || null)} 
-            className="block w-full text-gray-300" 
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="block w-full text-gray-300"
           />
         </div>
         <input className="px-3 py-2 rounded bg-black/30" placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />

@@ -6,7 +6,7 @@ import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ITEMS_PER_PAGE = 6;
 
 const MyBookings = () => {

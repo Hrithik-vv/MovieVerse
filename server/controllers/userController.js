@@ -92,9 +92,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// @desc    Change user password
-// @route   PUT /api/users/password
-// @access  Private
+
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
